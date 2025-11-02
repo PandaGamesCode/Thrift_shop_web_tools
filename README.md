@@ -1,4 +1,4 @@
-# Thrift Shop Web Tools 
+# Thrift Shop Web Tools - V2
 
 A lightweight, embeddable dashboard designed to streamline volunteer coordination in thrift shops. Easily integrated into **Google Sites** using the "Embed HTML" feature, this tool gives staff and volunteers instant access to essential resources—all from a single, clean interface.
 

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thrift Shop Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4f46e5',
+            secondary: '#818cf8',
+            accent: '#c7d2fe'
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+    }
+    .card {
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    .btn {
+      transition: all 0.2s ease;
+    }
+    .btn:hover {
+      transform: scale(1.02);
+    }
+    .btn:active {
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-md">
+    <div class="card bg-white/80 border border-indigo-100 rounded-2xl shadow-xl p-8">
+      <div class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-indigo-900 mb-2">Thrift Shop Manager</h1>
+        <p class="text-indigo-600">Access your tools and resources</p>
+      </div>
+      
+      <div class="space-y-6">
+        <button 
+          onclick="handleDailyLogClick()"
+          class="btn w-full h-16 text-lg font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-md flex items-center justify-center"
+        >
+          <i class="fas fa-calendar-alt mr-3"></i>
+          Daily log in 2025
+          <i class="fas fa-arrow-right ml-3"></i>
+        </button>
+        
+        <button 
+          onclick="handlePolicyClick()"
+          class="btn w-full h-12 text-sm font-medium border border-indigo-200 text-indigo-700 hover:bg-indigo-50 rounded-lg flex items-center justify-center"
+        >
+          <i class="fas fa-users mr-2"></i>
+          New volunteer policy for 2025
+        </button>
+        
+        <button 
+          onclick="handleNewTab()"
+          class="btn w-full h-12 text-sm font-medium bg-indigo-100 text-indigo-800 hover:bg-indigo-200 rounded-lg"
+        >
+          New tab
+        </button>
+      </div>
+      
+      <div class="mt-12 text-center">
+        <p class="text-sm text-indigo-500">
+          Thrift Shop Management System v2.0
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function handleDailyLogClick() {
+      window.open("https://docs.google.com/forms/d/e/1FAIpQLSffCTK1C1-4sq4Q980BALkHLmNuZWjgQZp0YyTbuAEvzigzhg/viewform", "_blank");
+    }
+
+    function handlePolicyClick() {
+      window.open("https://docs.google.com/forms/u/0/d/e/1FAIpQLSdxlubJeacO_d32SRbO7e9QnqnvzMy5wfedbQeyTnieF0GluQ/formResponse", "_blank");
+    }
+
+    function handleNewTab() {
+      // Replace with your desired URL
+      window.open("https://www.google.com", "_blank");
+    }
+  </script>
+</body>
+</html>

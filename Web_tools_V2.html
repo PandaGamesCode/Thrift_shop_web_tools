@@ -1,0 +1,878 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thrift Shop Web Tools</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: flex;
+            height: 100vh;
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+            border-radius: 16px;
+            margin: 16px;
+            overflow: hidden;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: linear-gradient(180deg, #1a1a2e 0%, #16213e 100%);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .quick-actions {
+            padding: 24px 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .quick-actions h2 {
+            font-size: 16px;
+            font-weight: 700;
+            color: #e2e8f0;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.8;
+        }
+
+        .action-btn {
+            width: 100%;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            padding: 14px 18px;
+            text-align: left;
+            border: none;
+            border-radius: 14px;
+            background: rgba(255, 255, 255, 0.08);
+            color: #f8fafc;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 12px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: translateX(-100%);
+            transition: transform 0.6s ease;
+        }
+
+        .action-btn:hover::before {
+            transform: translateX(100%);
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+        }
+
+        .action-btn.timesheet {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .action-btn.timesheet:hover {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            box-shadow: 0 8px 16px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.volunteer {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .action-btn.volunteer:hover {
+            background: linear-gradient(135deg, #3a9de9 0%, #00d9e6 100%);
+            box-shadow: 0 8px 16px rgba(79, 172, 254, 0.4);
+        }
+
+        .action-btn.google {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .action-btn.google:hover {
+            background: linear-gradient(135deg, #e67ff5 0%, #f2435a 100%);
+            box-shadow: 0 8px 16px rgba(245, 87, 108, 0.4);
+        }
+
+        .action-btn i {
+            font-size: 18px;
+            width: 24px;
+            min-width: 24px;
+            text-align: center;
+        }
+
+        .tabs-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 0;
+        }
+
+        .tab-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px;
+            margin: 0 16px 12px;
+            border-radius: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+        }
+
+        .tab-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateY(-1px);
+        }
+
+        .tab-item.active {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(118, 75, 162, 0.3) 100%);
+            color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .tab-info {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 0;
+            flex: 1;
+        }
+
+        .tab-icon {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 14px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-item.active .tab-icon {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .tab-name {
+            font-size: 15px;
+            font-weight: 600;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            color: #f8fafc;
+        }
+
+        .tab-item.active .tab-name {
+            color: white;
+        }
+
+        .timer-badge {
+            background: rgba(239, 68, 68, 0.2);
+            color: #fecaca;
+            padding: 4px 10px;
+            border-radius: 14px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-left: 10px;
+            min-width: 50px;
+            text-align: center;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+
+        .tab-item.active .timer-badge {
+            background: rgba(239, 68, 68, 0.3);
+            color: #fff;
+            border-color: rgba(239, 68, 68, 0.4);
+        }
+
+        .tab-close {
+            width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #94a3b8;
+            cursor: pointer;
+            opacity: 0;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .tab-item:hover .tab-close {
+            opacity: 1;
+        }
+
+        .tab-close:hover {
+            background: rgba(239, 68, 68, 0.3);
+            color: #fecaca;
+            transform: scale(1.1);
+        }
+
+        /* Main Content Styles */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+
+        .default-view {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+        }
+
+        .default-content {
+            text-align: center;
+            max-width: 560px;
+        }
+
+        .default-icon {
+            width: 120px;
+            height: 120px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 36px;
+            box-shadow: 0 12px 24px rgba(102, 126, 234, 0.3);
+        }
+
+        .default-icon i {
+            font-size: 56px;
+            color: white;
+        }
+
+        .default-content h2 {
+            font-size: 36px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 20px;
+            line-height: 1.2;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .default-content p {
+            font-size: 19px;
+            color: #475569;
+            line-height: 1.6;
+            margin-bottom: 36px;
+            font-weight: 500;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 24px;
+            margin-top: 28px;
+        }
+
+        .feature-item {
+            background: white;
+            padding: 24px 16px;
+            border-radius: 16px;
+            text-align: center;
+            border: 2px solid #f1f5f9;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-item:hover {
+            transform: translateY(-4px);
+            border-color: #e2e8f0;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .feature-icon {
+            width: 56px;
+            height: 56px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 16px;
+            color: white;
+            font-size: 24px;
+        }
+
+        .feature-item:nth-child(2) .feature-icon {
+            background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        .feature-item:nth-child(3) .feature-icon {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .feature-title {
+            font-size: 15px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.4;
+        }
+
+        .iframe-container {
+            flex: 1;
+            background: white;
+        }
+
+        .iframe-container iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+            border-radius: 20px;
+            padding: 36px;
+            width: 100%;
+            max-width: 540px;
+            margin: 0 20px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.4);
+            transform: translateY(0);
+            transition: transform 0.3s ease;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .modal-content h3 {
+            font-size: 26px;
+            font-weight: 800;
+            color: #1e293b;
+            margin-bottom: 18px;
+            text-align: center;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .modal-content p {
+            color: #475569;
+            margin-bottom: 26px;
+            line-height: 1.6;
+            text-align: center;
+            font-size: 17px;
+            font-weight: 500;
+        }
+
+        .name-input {
+            width: 100%;
+            padding: 18px 22px;
+            border: 2px solid #e2e8f0;
+            border-radius: 14px;
+            font-size: 17px;
+            outline: none;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            background: #f8fafc;
+        }
+
+        .name-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.2);
+            background: white;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 18px;
+            margin-top: 30px;
+        }
+
+        .modal-btn {
+            flex: 1;
+            padding: 18px;
+            border: none;
+            border-radius: 14px;
+            font-size: 17px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .cancel-btn {
+            background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+            color: #475569;
+        }
+
+        .cancel-btn:hover {
+            background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .create-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .create-btn:hover:not(:disabled) {
+            background: linear-gradient(135deg, #5a6fd8 0%, #6a4190 100%);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .create-btn:disabled {
+            background: #cbd5e1;
+            color: #94a3b8;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Scrollbar styling */
+        .tabs-list::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        .tabs-list::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tabs-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 5px;
+        }
+
+        .tabs-list::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .app-container {
+                margin: 8px;
+                border-radius: 12px;
+            }
+            
+            .sidebar {
+                width: 240px;
+            }
+            
+            .default-content h2 {
+                font-size: 28px;
+            }
+            
+            .default-content p {
+                font-size: 16px;
+            }
+            
+            .features-grid {
+                gap: 16px;
+            }
+            
+            .feature-item {
+                padding: 18px 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="quick-actions">
+                <h2>Quick Actions</h2>
+                <button class="action-btn timesheet" onclick="showNameModal('timesheet')">
+                    <i class="fas fa-user-clock"></i>
+                    <span>New Time Sheet</span>
+                </button>
+                <button class="action-btn volunteer" onclick="createVolunteerTab()">
+                    <i class="fas fa-user-plus"></i>
+                    <span>Volunteer Sign-Up</span>
+                </button>
+                <button class="action-btn google" onclick="openGoogleTab()">
+                    <i class="fab fa-google"></i>
+                    <span>Google.com</span>
+                </button>
+            </div>
+            <div class="tabs-list" id="tabsList">
+                <!-- Default tab will be added here -->
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <div class="default-view" id="defaultView">
+                <div class="default-content">
+                    <div class="default-icon">
+                        <i class="fas fa-store"></i>
+                    </div>
+                    <h2>Thrift Shop Web Tools</h2>
+                    <p>Manage your volunteer operations efficiently with personalized time sheets and quick access tools.</p>
+                    <div class="features-grid">
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-clock"></i>
+                            </div>
+                            <div class="feature-title">Personal Time Sheets</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <div class="feature-title">20-Min Volunteer Forms</div>
+                        </div>
+                        <div class="feature-item">
+                            <div class="feature-icon">
+                                <i class="fab fa-google"></i>
+                            </div>
+                            <div class="feature-title">Quick Google Access</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="iframe-container" id="iframeContainer" style="display: none;">
+                <!-- iframe will be inserted here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Name Modal -->
+    <div class="modal-overlay" id="nameModal" style="display: none;">
+        <div class="modal-content">
+            <h3>Enter Your Name</h3>
+            <p>Please enter your full name to create your personal time sheet.</p>
+            <input type="text" class="name-input" id="tabNameInput" placeholder="Your full name" maxlength="50">
+            <div class="modal-buttons">
+                <button class="modal-btn cancel-btn" onclick="hideNameModal()">Cancel</button>
+                <button class="modal-btn create-btn" onclick="createNewTab()" id="createTabBtn">Create Time Sheet</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Tab configuration
+        const tabTypes = {
+            timesheet: {
+                name: 'Time Sheet',
+                url: 'https://docs.google.com/forms/d/e/1FAIpQLSffCTK1C1-4sq4Q980BALkHLmNuZWjgQZp0YyTbuAEvzigzhg/viewform',
+                icon: 'fa-user-clock'
+            },
+            volunteer: {
+                name: 'Volunteer Sign-Up',
+                url: 'https://docs.google.com/forms/u/0/d/e/1FAIpQLSdxlubJeacO_d32SRbO7e9QnqnvzMy5wfedbQeyTnieF0GluQ/formResponse',
+                icon: 'fa-user-plus'
+            }
+        };
+
+        // State management
+        let tabs = [{ id: 'default', name: 'Home Dashboard', isActive: true }];
+        let activeTabId = 'default';
+        let currentTabType = '';
+        let volunteerTimers = {};
+
+        // DOM Elements
+        const tabsList = document.getElementById('tabsList');
+        const defaultView = document.getElementById('defaultView');
+        const iframeContainer = document.getElementById('iframeContainer');
+        const nameModal = document.getElementById('nameModal');
+        const tabNameInput = document.getElementById('tabNameInput');
+        const createTabBtn = document.getElementById('createTabBtn');
+
+        // Show name modal for time sheet
+        function showNameModal(tabType) {
+            currentTabType = tabType;
+            tabNameInput.value = '';
+            nameModal.style.display = 'flex';
+            tabNameInput.focus();
+        }
+
+        // Hide name modal
+        function hideNameModal() {
+            nameModal.style.display = 'none';
+        }
+
+        // Create new time sheet tab
+        function createNewTab() {
+            const name = tabNameInput.value.trim();
+            if (!name) return;
+
+            const tabConfig = tabTypes[currentTabType];
+            const newTabId = `${currentTabType}-${Date.now()}`;
+            const newTabName = `${name} - ${tabConfig.name}`;
+
+            // Create new tab object
+            const newTab = {
+                id: newTabId,
+                name: newTabName,
+                type: currentTabType,
+                url: tabConfig.url,
+                isActive: true
+            };
+
+            // Deactivate current active tab
+            tabs = tabs.map(tab => ({ ...tab, isActive: false }));
+            
+            // Add new tab
+            tabs.push(newTab);
+            activeTabId = newTabId;
+
+            // Update UI
+            renderTabs();
+            switchToTab(newTabId);
+            hideNameModal();
+        }
+
+        // Create volunteer tab with 20-minute timer
+        function createVolunteerTab() {
+            const newTabId = `volunteer-${Date.now()}`;
+            const newTabName = 'Volunteer Sign-Up';
+            const timeLimit = 20 * 60; // 20 minutes in seconds
+
+            // Create new tab object
+            const newTab = {
+                id: newTabId,
+                name: newTabName,
+                type: 'volunteer',
+                url: tabTypes.volunteer.url,
+                isActive: true,
+                timer: timeLimit
+            };
+
+            // Deactivate current active tab
+            tabs = tabs.map(tab => ({ ...tab, isActive: false }));
+            
+            // Add new tab
+            tabs.push(newTab);
+            activeTabId = newTabId;
+
+            // Start timer
+            startVolunteerTimer(newTabId, timeLimit);
+
+            // Update UI
+            renderTabs();
+            switchToTab(newTabId);
+        }
+
+        // Start volunteer timer
+        function startVolunteerTimer(tabId, seconds) {
+            volunteerTimers[tabId] = {
+                remaining: seconds,
+                interval: setInterval(() => {
+                    volunteerTimers[tabId].remaining--;
+                    const remaining = volunteerTimers[tabId].remaining;
+                    
+                    if (remaining <= 0) {
+                        // Timer expired, remove tab
+                        clearInterval(volunteerTimers[tabId].interval);
+                        delete volunteerTimers[tabId];
+                        removeTabById(tabId);
+                        return;
+                    }
+                    
+                    // Update timer display
+                    renderTabs();
+                }, 1000)
+            };
+        }
+
+        // Remove tab by ID
+        function removeTabById(tabId) {
+            tabs = tabs.filter(tab => tab.id !== tabId);
+            
+            if (activeTabId === tabId) {
+                // Activate the default tab
+                const newActiveId = 'default';
+                tabs.forEach(tab => {
+                    tab.isActive = tab.id === newActiveId;
+                });
+                activeTabId = newActiveId;
+                switchToTab(newActiveId);
+            }
+            
+            renderTabs();
+        }
+
+        // Open Google in new browser tab
+        function openGoogleTab() {
+            window.open('https://www.google.com', '_blank');
+        }
+
+        // Render tabs in sidebar
+        function renderTabs() {
+            tabsList.innerHTML = '';
+            
+            tabs.forEach(tab => {
+                const tabElement = document.createElement('div');
+                tabElement.className = `tab-item ${tab.isActive ? 'active' : ''}`;
+                tabElement.dataset.tabId = tab.id;
+                tabElement.onclick = () => switchToTab(tab.id);
+                
+                let iconClass = 'fa-home';
+                let timerHtml = '';
+                
+                if (tab.id === 'default') {
+                    iconClass = 'fa-home';
+                } else if (tab.type === 'volunteer') {
+                    iconClass = 'fa-user-plus';
+                    // Show timer for volunteer tabs
+                    if (volunteerTimers[tab.id]) {
+                        const minutes = Math.floor(volunteerTimers[tab.id].remaining / 60);
+                        const seconds = volunteerTimers[tab.id].remaining % 60;
+                        const timeText = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+                        timerHtml = `<span class="timer-badge">${timeText}</span>`;
+                    }
+                } else if (tab.type === 'timesheet') {
+                    iconClass = 'fa-user-clock';
+                }
+                
+                const closeBtn = tab.id !== 'default' ? '<span class="tab-close" onclick="removeTab(event, \'' + tab.id + '\')">✕</span>' : '';
+                
+                tabElement.innerHTML = `
+                    <div class="tab-info">
+                        <div class="tab-icon">
+                            <i class="fas ${iconClass}"></i>
+                        </div>
+                        <span class="tab-name">${tab.name}</span>
+                        ${timerHtml}
+                    </div>
+                    ${closeBtn}
+                `;
+                
+                tabsList.appendChild(tabElement);
+            });
+        }
+
+        // Switch to tab
+        function switchToTab(tabId) {
+            // Update active state
+            tabs = tabs.map(tab => ({
+                ...tab,
+                isActive: tab.id === tabId
+            }));
+            activeTabId = tabId;
+
+            // Update UI
+            renderTabs();
+
+            const activeTab = tabs.find(tab => tab.id === tabId);
+            
+            if (tabId === 'default') {
+                defaultView.style.display = 'flex';
+                iframeContainer.style.display = 'none';
+            } else {
+                defaultView.style.display = 'none';
+                iframeContainer.style.display = 'block';
+                
+                // Create or update iframe
+                let iframe = iframeContainer.querySelector('iframe');
+                if (!iframe) {
+                    iframe = document.createElement('iframe');
+                    iframe.setAttribute('sandbox', 'allow-same-origin allow-scripts allow-forms allow-popups allow-top-navigation');
+                    iframeContainer.appendChild(iframe);
+                }
+                iframe.src = activeTab.url;
+            }
+        }
+
+        // Remove tab
+        function removeTab(event, tabId) {
+            event.stopPropagation();
+            
+            if (tabs.length <= 1) return;
+            
+            // Clear timer if it's a volunteer tab
+            if (volunteerTimers[tabId]) {
+                clearInterval(volunteerTimers[tabId].interval);
+                delete volunteerTimers[tabId];
+            }
+            
+            tabs = tabs.filter(tab => tab.id !== tabId);
+            
+            if (activeTabId === tabId) {
+                // Activate the default tab
+                const newActiveId = 'default';
+                tabs.forEach(tab => {
+                    tab.isActive = tab.id === newActiveId;
+                });
+                activeTabId = newActiveId;
+                switchToTab(newActiveId);
+            }
+            
+            renderTabs();
+        }
+
+        // Initialize with default tab
+        renderTabs();
+
+        // Handle Enter key in modal
+        tabNameInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                createNewTab();
+            }
+        });
+
+        // Handle button states
+        tabNameInput.addEventListener('input', () => {
+            createTabBtn.disabled = !tabNameInput.value.trim();
+        });
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            // Clear all timers
+            Object.values(volunteerTimers).forEach(timer => {
+                if (timer.interval) {
+                    clearInterval(timer.interval);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

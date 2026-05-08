@@ -1,0 +1,696 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Thrift Shop Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#4f46e5',
+            secondary: '#818cf8',
+            accent: '#c7d2fe'
+          },
+          animation: {
+            'gradient-x': 'gradient-x 15s ease infinite',
+          },
+          keyframes: {
+            'gradient-x': {
+              '0%, 100%': {
+                'background-size': '200% 200%',
+                'background-position': 'left center'
+              },
+              '50%': {
+                'background-size': '200% 200%',
+                'background-position': 'right center'
+              },
+            },
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    body {
+      font-family: 'Inter', sans-serif;
+      background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #0f172a);
+      background-size: 400% 400%;
+      animation: gradient 15s ease infinite;
+      overflow: hidden;
+      margin: 0;
+    }
+
+    @keyframes gradient {
+      0% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+      100% { background-position: 0% 50%; }
+    }
+
+    #particles-js {
+      position: fixed;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+    }
+
+    .card {
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+
+    .btn {
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 15px rgba(99, 102, 241, 0.5);
+    }
+    .btn:active {
+      transform: translateY(0);
+    }
+
+    /* Modal Styles */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 100;
+      backdrop-filter: blur(4px);
+    }
+
+    .modal-overlay.active {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: rgba(30, 41, 59, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 600px;
+      width: 90%;
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .tab-button {
+      transition: all 0.3s ease;
+    }
+
+    .tab-button.active {
+      background: rgba(99, 102, 241, 0.3);
+      border-color: rgba(99, 102, 241, 0.6);
+    }
+
+    .time-sheet-card {
+      background: rgba(51, 65, 85, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+    }
+
+    input, textarea {
+      background: rgba(51, 65, 85, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: white;
+      padding: 0.75rem;
+      border-radius: 8px;
+      width: 100%;
+      transition: all 0.3s ease;
+    }
+
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: rgba(99, 102, 241, 0.6);
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.3);
+    }
+
+    ::placeholder {
+      color: rgba(255, 255, 255, 0.5);
+    }
+  </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4">
+  
+  <!-- Particle Canvas -->
+  <canvas id="particles-js"></canvas>
+
+  <div class="w-full max-w-md z-10">
+    <div class="card rounded-2xl p-8">
+      <div class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-white mb-2 tracking-tight drop-shadow-md">Thrift Shop Manager</h1>
+        <p class="text-indigo-300 font-light">Access your tools and resources</p>
+      </div>
+      
+      <div class="space-y-6">
+        <!-- Time Sheet Button -->
+        <button 
+          onclick="openTimeSheetModal()"
+          class="btn w-full h-16 text-lg font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white rounded-xl shadow-lg flex items-center justify-center"
+        >
+          <i class="fas fa-clock mr-3"></i>
+          New Time Sheet
+          <i class="fas fa-plus ml-3 opacity-70"></i>
+        </button>
+
+        <!-- View Time Sheets Button -->
+        <button 
+          onclick="openTimeSheetsTab()"
+          class="btn w-full h-14 text-md font-medium bg-gradient-to-r from-teal-500 to-cyan-600 hover:from-teal-400 hover:to-cyan-500 text-white rounded-xl shadow-lg flex items-center justify-center"
+        >
+          <i class="fas fa-table mr-3"></i>
+          View All Time Sheets
+          <span id="timeSheetCount" class="ml-3 bg-white/20 px-2 py-0.5 rounded-full text-sm">0</span>
+        </button>
+        
+        <button 
+          onclick="handleDailyLogClick()"
+          class="btn w-full h-16 text-lg font-semibold bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white rounded-xl shadow-lg flex items-center justify-center"
+        >
+          <i class="fas fa-calendar-alt mr-3"></i>
+          Daily log in 2026
+          <i class="fas fa-arrow-right ml-3 opacity-70"></i>
+        </button>
+        
+        <button 
+          onclick="handlePolicyClick()"
+          class="btn w-full h-12 text-sm font-medium border border-indigo-400/30 text-indigo-100 hover:bg-indigo-500/20 hover:border-indigo-400/60 rounded-lg flex items-center justify-center backdrop-blur-sm"
+        >
+          <i class="fas fa-users mr-2"></i>
+          New volunteer policy for 2026
+        </button>
+
+        <!-- Blog Button -->
+        <button 
+          onclick="handleBlogClick()"
+          class="btn w-full h-12 text-sm font-medium bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-400 hover:to-amber-400 text-white rounded-lg shadow-lg flex items-center justify-center"
+        >
+          <img src="https://imgs.search.brave.com/UcGBr7HVlyxIutgT_3pqk_IaBegVENzJbdVw9bNLLxk/rs:fit:860:0:0:0/g:ce/aHR0cHM6Ly9pbWFn/ZXMuaWNvbi1pY29u/cy5jb20vMjEwOC9Q/TkcvNTEyL2Jsb2dn/ZXJfaWNvbl8xMzA5/NzYucG5n" alt="Blog Icon" class="w-5 h-5 mr-2 object-contain">
+          Blog
+        </button>
+        
+        <!-- Flex container for the two bottom buttons -->
+        <div class="flex gap-4 w-full">
+          <button 
+            onclick="handleNewTabClick()"
+            class="btn flex-1 h-12 text-sm font-medium bg-slate-700/50 text-indigo-100 hover:bg-slate-700/80 rounded-lg flex items-center justify-center border border-white/5"
+          >
+            New tab
+          </button>
+
+          <button 
+            onclick="handleAiClick()"
+            class="btn w-12 h-12 bg-gradient-to-br from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white rounded-lg shadow-lg flex items-center justify-center border border-white/10"
+            title="Open Google AI Mode"
+          >
+            <i class="fas fa-robot text-lg"></i>
+          </button>
+        </div>
+      </div>
+      
+      <div class="mt-12 text-center">
+        <p class="text-xs text-indigo-400/60 uppercase tracking-widest font-semibold">
+          Thrift Shop Management System v5.4
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Time Sheet Form Modal -->
+  <div id="timeSheetModal" class="modal-overlay">
+    <div class="modal-content">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-white">
+          <i class="fas fa-clock mr-2 text-green-400"></i>
+          New Time Sheet
+        </h2>
+        <button onclick="closeTimeSheetModal()" class="text-gray-400 hover:text-white transition">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <form id="timeSheetForm" onsubmit="submitTimeSheet(event)" class="space-y-4">
+        <div>
+          <label class="block text-sm font-medium text-indigo-300 mb-2">Full Name *</label>
+          <input 
+            type="text" 
+            id="volunteerName" 
+            required
+            placeholder="Enter your full name"
+            class="w-full"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-indigo-300 mb-2">Date *</label>
+          <input 
+            type="date" 
+            id="workDate" 
+            required
+            class="w-full"
+          />
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-indigo-300 mb-2">Start Time *</label>
+            <input 
+              type="time" 
+              id="startTime" 
+              required
+              class="w-full"
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-indigo-300 mb-2">End Time *</label>
+            <input 
+              type="time" 
+              id="endTime" 
+              required
+              class="w-full"
+            />
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-indigo-300 mb-2">Tasks Completed</label>
+          <textarea 
+            id="tasks" 
+            rows="3"
+            placeholder="Describe what you worked on..."
+            class="w-full"
+          ></textarea>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-indigo-300 mb-2">Notes (Optional)</label>
+          <textarea 
+            id="notes" 
+            rows="2"
+            placeholder="Any additional notes..."
+            class="w-full"
+          ></textarea>
+        </div>
+
+        <div class="flex gap-3 pt-4">
+          <button 
+            type="button"
+            onclick="closeTimeSheetModal()"
+            class="flex-1 h-12 text-sm font-medium border border-gray-600 text-gray-300 hover:bg-gray-700/50 rounded-lg transition"
+          >
+            Cancel
+          </button>
+          <button 
+            type="submit"
+            class="flex-1 h-12 text-sm font-semibold bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white rounded-lg shadow-lg transition"
+          >
+            <i class="fas fa-save mr-2"></i>
+            Submit Time Sheet
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Time Sheets Tab Modal -->
+  <div id="timeSheetsTabModal" class="modal-overlay">
+    <div class="modal-content" style="max-width: 900px;">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-white">
+          <i class="fas fa-table mr-2 text-teal-400"></i>
+          All Time Sheets
+        </h2>
+        <button onclick="closeTimeSheetsTab()" class="text-gray-400 hover:text-white transition">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Search and Filter -->
+      <div class="mb-6 flex gap-4">
+        <input 
+          type="text" 
+          id="searchInput"
+          onkeyup="filterTimeSheets()"
+          placeholder="Search by name..."
+          class="flex-1"
+        />
+        <button 
+          onclick="exportToCSV()"
+          class="h-12 px-4 text-sm font-medium bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-400 hover:to-indigo-500 text-white rounded-lg transition flex items-center"
+        >
+          <i class="fas fa-download mr-2"></i>
+          Export CSV
+        </button>
+      </div>
+
+      <!-- Time Sheets Container -->
+      <div id="timeSheetsContainer" class="space-y-4 max-h-[60vh] overflow-y-auto">
+        <!-- Time sheets will be dynamically loaded here -->
+      </div>
+
+      <div class="mt-6 flex justify-between items-center text-sm text-gray-400">
+        <span id="totalHours">Total Hours: 0</span>
+        <button 
+          onclick="clearAllData()"
+          class="text-red-400 hover:text-red-300 transition"
+        >
+          <i class="fas fa-trash mr-1"></i>
+          Clear All Data
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // --- Core Functionality ---
+    function handleDailyLogClick() {
+      window.open("https://docs.google.com/forms/d/e/1FAIpQLSfM1R0xopH7P0To6rJM-8uA6sHxpmd94DOtZzeqCBJTOsJ7FA/viewform?usp=publish-editor");
+    }
+
+    function handlePolicyClick() {
+      window.open("https://docs.google.com/forms/d/e/1FAIpQLSdWsudtnHu4waMEwvOjPjBghEAEfaAmPrlM-Lieqk7UGsJcDg/viewform?usp=publish-editor", "_blank");
+    }
+
+    function handleNewTabClick() {
+      window.open("https://www.google.com/", "_blank");
+    }
+
+    function handleAiClick() {
+      window.open("https://www.google.com/search?sca_esv=cd8b0170047d7d59&sxsrf=AE3TifM0Jdanj64vOiO9Ngvy6Rzc-92nYQ%3A1767411529503&source=hp&ei=SY9YaaPWHJ_S2roPqrawwAE&iflsig=AOw8s4IAAAAAaVidWRFYy-gRB6-oFdspYEge0oPiqOT5&aep=22&udm=50&ved=2ahUKEwjUoNeDue6RAxUsslYBHY3YB1YQoo4PegYIAQAEAA&oq=&gs_lp=Egdnd3Mtd2l6IgBIAFAAWABwAHgAkAEAmAEAoAEAqgEAuAEByAEAmAIAoAIAmAMAkgcAoAcAsgcAuAcAwgcAyAcAgAgA&sclient=gws-wiz", "_blank");
+    }
+
+    function handleBlogClick() {
+      window.open("https://coolthriftitems.blogspot.com/", "_blank");
+    }
+
+    // --- Time Sheet Functions ---
+    
+    // Initialize time sheets from localStorage
+    function getTimeSheets() {
+      const data = localStorage.getItem('timeSheets');
+      return data ? JSON.parse(data) : [];
+    }
+
+    function saveTimeSheets(timeSheets) {
+      localStorage.setItem('timeSheets', JSON.stringify(timeSheets));
+      updateTimeSheetCount();
+    }
+
+    function updateTimeSheetCount() {
+      const count = getTimeSheets().length;
+      document.getElementById('timeSheetCount').textContent = count;
+    }
+
+    function openTimeSheetModal() {
+      // Set default date to today
+      document.getElementById('workDate').valueAsDate = new Date();
+      document.getElementById('timeSheetModal').classList.add('active');
+    }
+
+    function closeTimeSheetModal() {
+      document.getElementById('timeSheetModal').classList.remove('active');
+      document.getElementById('timeSheetForm').reset();
+      document.getElementById('workDate').valueAsDate = new Date();
+    }
+
+    function submitTimeSheet(event) {
+      event.preventDefault();
+      
+      const name = document.getElementById('volunteerName').value.trim();
+      const date = document.getElementById('workDate').value;
+      const startTime = document.getElementById('startTime').value;
+      const endTime = document.getElementById('endTime').value;
+      const tasks = document.getElementById('tasks').value.trim();
+      const notes = document.getElementById('notes').value.trim();
+
+      // Calculate hours worked
+      const start = new Date(`2000-01-01T${startTime}`);
+      const end = new Date(`2000-01-01T${endTime}`);
+      let hours = (end - start) / (1000 * 60 * 60);
+      if (hours < 0) hours += 24; // Handle overnight shifts
+
+      const timeSheet = {
+        id: Date.now(),
+        name,
+        date,
+        startTime,
+        endTime,
+        hours: hours.toFixed(2),
+        tasks,
+        notes,
+        submittedAt: new Date().toISOString()
+      };
+
+      const timeSheets = getTimeSheets();
+      timeSheets.push(timeSheet);
+      
+      // Sort by date (newest first)
+      timeSheets.sort((a, b) => new Date(b.date) - new Date(a.date));
+      
+      saveTimeSheets(timeSheets);
+      
+      closeTimeSheetModal();
+      
+      // Show success message
+      alert('Time sheet submitted successfully!');
+    }
+
+    function openTimeSheetsTab() {
+      renderTimeSheets();
+      document.getElementById('timeSheetsTabModal').classList.add('active');
+    }
+
+    function closeTimeSheetsTab() {
+      document.getElementById('timeSheetsTabModal').classList.remove('active');
+    }
+
+    function renderTimeSheets(filter = '') {
+      const timeSheets = getTimeSheets();
+      const container = document.getElementById('timeSheetsContainer');
+      
+      const filtered = filter 
+        ? timeSheets.filter(ts => ts.name.toLowerCase().includes(filter.toLowerCase()))
+        : timeSheets;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `
+          <div class="text-center py-12 text-gray-400">
+            <i class="fas fa-clock text-6xl mb-4 opacity-30"></i>
+            <p class="text-lg">No time sheets found</p>
+            <p class="text-sm mt-2">Submit your first time sheet to get started!</p>
+          </div>
+        `;
+        document.getElementById('totalHours').textContent = 'Total Hours: 0';
+        return;
+      }
+
+      let totalHours = 0;
+      container.innerHTML = filtered.map(ts => {
+        totalHours += parseFloat(ts.hours);
+        return `
+          <div class="time-sheet-card">
+            <div class="flex justify-between items-start mb-3">
+              <div>
+                <h3 class="text-lg font-semibold text-white">${ts.name}</h3>
+                <p class="text-sm text-indigo-300">${formatDate(ts.date)}</p>
+              </div>
+              <div class="text-right">
+                <span class="bg-green-500/20 text-green-400 px-3 py-1 rounded-full text-sm font-medium">
+                  ${ts.hours} hrs
+                </span>
+                <button 
+                  onclick="deleteTimeSheet(${ts.id})"
+                  class="ml-2 text-red-400 hover:text-red-300 transition"
+                  title="Delete"
+                >
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+            <div class="grid grid-cols-2 gap-4 text-sm text-gray-300 mb-3">
+              <div>
+                <span class="text-indigo-400">Time:</span> ${ts.startTime} - ${ts.endTime}
+              </div>
+              <div>
+                <span class="text-indigo-400">Submitted:</span> ${new Date(ts.submittedAt).toLocaleDateString()}
+              </div>
+            </div>
+            ${ts.tasks ? `<p class="text-sm text-gray-300 mb-2"><span class="text-indigo-400">Tasks:</span> ${ts.tasks}</p>` : ''}
+            ${ts.notes ? `<p class="text-sm text-gray-400 italic"><span class="text-indigo-400">Notes:</span> ${ts.notes}</p>` : ''}
+          </div>
+        `;
+      }).join('');
+
+      document.getElementById('totalHours').textContent = `Total Hours: ${totalHours.toFixed(2)}`;
+    }
+
+    function filterTimeSheets() {
+      const searchInput = document.getElementById('searchInput').value;
+      renderTimeSheets(searchInput);
+    }
+
+    function deleteTimeSheet(id) {
+      if (!confirm('Are you sure you want to delete this time sheet?')) return;
+      
+      let timeSheets = getTimeSheets();
+      timeSheets = timeSheets.filter(ts => ts.id !== id);
+      saveTimeSheets(timeSheets);
+      renderTimeSheets();
+    }
+
+    function clearAllData() {
+      if (!confirm('WARNING: This will delete ALL time sheets permanently. Are you sure?')) return;
+      
+      localStorage.removeItem('timeSheets');
+      updateTimeSheetCount();
+      renderTimeSheets();
+    }
+
+    function exportToCSV() {
+      const timeSheets = getTimeSheets();
+      
+      if (timeSheets.length === 0) {
+        alert('No time sheets to export!');
+        return;
+      }
+
+      const headers = ['Name', 'Date', 'Start Time', 'End Time', 'Hours', 'Tasks', 'Notes', 'Submitted At'];
+      const csvContent = [
+        headers.join(','),
+        ...timeSheets.map(ts => [
+          `"${ts.name}"`,
+          ts.date,
+          ts.startTime,
+          ts.endTime,
+          ts.hours,
+          `"${ts.tasks.replace(/"/g, '""')}"`,
+          `"${ts.notes.replace(/"/g, '""')}"`,
+          ts.submittedAt
+        ].join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `time_sheets_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+    }
+
+    function formatDate(dateString) {
+      const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+      return new Date(dateString).toLocaleDateString('en-US', options);
+    }
+
+    // Initialize on load
+    document.addEventListener('DOMContentLoaded', () => {
+      updateTimeSheetCount();
+    });
+
+    // --- Particle Animation Logic ---
+    const canvas = document.getElementById("particles-js");
+    const ctx = canvas.getContext("2d");
+    
+    let particlesArray;
+    
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    
+    window.addEventListener('resize', () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      init();
+    });
+
+    class Particle {
+      constructor() {
+        this.x = Math.random() * canvas.width;
+        this.y = Math.random() * canvas.height;
+        this.directionX = (Math.random() * 0.4) - 0.2;
+        this.directionY = (Math.random() * 0.4) - 0.2;
+        this.size = Math.random() * 2 + 1;
+        this.color = '#818cf8';
+      }
+      draw() {
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2, false);
+        ctx.fillStyle = this.color;
+        ctx.fill();
+      }
+      update() {
+        if (this.x > canvas.width || this.x < 0) {
+          this.directionX = -this.directionX;
+        }
+        if (this.y > canvas.height || this.y < 0) {
+          this.directionY = -this.directionY;
+        }
+        this.x += this.directionX;
+        this.y += this.directionY;
+        this.draw();
+      }
+    }
+
+    function init() {
+      particlesArray = [];
+      let numberOfParticles = (canvas.height * canvas.width) / 7000; 
+      for (let i = 0; i < numberOfParticles; i++) {
+        particlesArray.push(new Particle());
+      }
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+      ctx.clearRect(0, 0, innerWidth, innerHeight);
+
+      for (let i = 0; i < particlesArray.length; i++) {
+        particlesArray[i].update();
+      }
+      connect();
+    }
+
+    function connect() {
+      let opacityValue = 1;
+      for (let a = 0; a < particlesArray.length; a++) {
+        for (let b = a; b < particlesArray.length; b++) {
+          let distance = ((particlesArray[a].x - particlesArray[b].x) * (particlesArray[a].x - particlesArray[b].x)) + 
+                         ((particlesArray[a].y - particlesArray[b].y) * (particlesArray[a].y - particlesArray[b].y));
+          if (distance < (canvas.width/7) * (canvas.height/7)) {
+            opacityValue = 1 - (distance / 20000);
+            ctx.strokeStyle = 'rgba(129, 140, 248,' + opacityValue + ')';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(particlesArray[a].x, particlesArray[a].y);
+            ctx.lineTo(particlesArray[b].x, particlesArray[b].y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    init();
+    animate();
+
+  </script>
+</body>
+</html>
